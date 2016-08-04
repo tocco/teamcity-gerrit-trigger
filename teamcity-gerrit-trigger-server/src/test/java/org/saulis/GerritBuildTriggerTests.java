@@ -14,12 +14,13 @@ import java.util.Date;
 
 import static org.mockito.Mockito.*;
 
-public class GerritPolledBuildTriggerTests {
+public class GerritBuildTriggerTests {
 
-    private GerritPolledBuildTrigger sut;
+    private GerritBuildTrigger trigger;
     private PolledTriggerContext context;
     private BuildCustomizerFactory buildCustomerFactory;
     private GerritClient client;
+    private GerritSettings settings;
     private ArrayList<GerritPatchSet> patchSets;
     private BuildPromotion buildPromotion;
     private BuildCustomizer buildCustomizer;
@@ -27,23 +28,24 @@ public class GerritPolledBuildTriggerTests {
     @Before
     public void setup() {
         client = mock(GerritClient.class);
+        settings = mock(GerritSettings.class);
         buildCustomerFactory = mock(BuildCustomizerFactory.class);
-
-        sut = new GerritPolledBuildTrigger(client, buildCustomerFactory);
 
         context = mock(PolledTriggerContext.class);
         patchSets = new ArrayList<GerritPatchSet>();
-        when(client.getNewPatchSets(any(GerritPolledTriggerContext.class))).thenReturn(patchSets);
+        when(client.getNewPatchSets(any(GerritTriggerContext.class))).thenReturn(patchSets);
 
         buildCustomizer = mock(BuildCustomizer.class);
         when(buildCustomerFactory.createBuildCustomizer(any(SBuildType.class), any(SUser.class))).thenReturn(buildCustomizer);
 
         buildPromotion = mock(BuildPromotion.class);
         when(buildCustomizer.createPromotion()).thenReturn(buildPromotion);
+
+        trigger = new GerritBuildTrigger(client, settings, buildCustomerFactory);
     }
 
     private void triggerBuild() {
-        sut.triggerBuild(context);
+        trigger.triggerBuild(context);
     }
 
     @Test
@@ -72,7 +74,4 @@ public class GerritPolledBuildTriggerTests {
 
         verify(buildPromotion).addToQueue("Gerrit");
     }
-
-
 }
-

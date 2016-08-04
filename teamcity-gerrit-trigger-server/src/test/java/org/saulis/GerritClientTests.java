@@ -4,9 +4,6 @@ import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-import jetbrains.buildServer.buildTriggers.BuildTriggerDescriptor;
-import jetbrains.buildServer.serverSide.CustomDataStorage;
-import org.hamcrest.core.IsNot;
 import org.hamcrest.core.StringContains;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,24 +24,20 @@ public class GerritClientTests {
 
     private GerritClient client;
     private JSch jsch;
-    private GerritPolledTriggerContext context;
+    private GerritTriggerContext context;
     private Session session;
     private ChannelExec channel;
     private int sshPort = 29418;
 
-    void mockDepedencies() {
-        jsch = mock(JSch.class);
-    }
-
     @Before
     public void setup() throws JSchException, IOException {
-        mockDepedencies();
-
-        client = new GerritClient(jsch);
-
-        context = mock(GerritPolledTriggerContext.class);
+        jsch = mock(JSch.class);
+        context = mock(GerritTriggerContext.class);
         session = mock(Session.class);
         channel = mock(ChannelExec.class);
+
+        client = new GerritClient();
+        client.setChannel(jsch);
 
         when(jsch.getSession(anyString(), anyString(), anyInt())).thenReturn(session);
         when(session.openChannel("exec")).thenReturn(channel);
@@ -54,6 +47,9 @@ public class GerritClientTests {
 
         Calendar calendar = new GregorianCalendar(2013, 0, 1);
         setTimeStamp(String.valueOf(calendar.getTime().getTime()));
+
+        setServerParameter("host.com");
+        setUserNameParameter("foobar");
     }
 
     private void assertThatCommandContains(String expected) {
@@ -62,6 +58,14 @@ public class GerritClientTests {
 
     private void assertThatCommandDoesNotContain(String expected) {
         verify(channel).setCommand(argThat(not(StringContains.containsString(expected))));
+    }
+
+    private void setServerParameter(String server) {
+        when(context.getServer()).thenReturn(server);
+    }
+
+    private void setUserNameParameter(String userName) {
+        when(context.getUsername()).thenReturn(userName);
     }
 
     private void setProjectParameter(String project) {
@@ -83,9 +87,9 @@ public class GerritClientTests {
 
         getNewPatchSets();
 
+        assertThatCommandContains("--current-patch-set");
         assertThatCommandContains("--format=JSON");
         assertThatCommandContains("status:open");
-        assertThatCommandContains("--current-patch-set");
         assertThatCommandContains("limit:10");
     }
 
@@ -136,7 +140,7 @@ public class GerritClientTests {
     @Test
     public void usernameAndHostParametersAreUsed() throws JSchException {
         when(context.getUsername()).thenReturn("foobar");
-        when(context.getHost()).thenReturn("host.com");
+        when(context.getServer()).thenReturn("host.com");
 
         getNewPatchSets();
 
@@ -194,7 +198,6 @@ public class GerritClientTests {
 
         getNewPatchSets();
 
-        verify(context).updateTimestampIfNewer(context.getTimestamp());
+        verify(context).updateTimestamp(context.getTimestamp());
     }
-
 }
