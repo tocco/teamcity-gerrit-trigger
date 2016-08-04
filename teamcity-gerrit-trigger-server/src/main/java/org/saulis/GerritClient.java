@@ -19,11 +19,13 @@ import java.util.*;
 public class GerritClient {
 
     private static final Logger LOG = Logger.getLogger(Loggers.VCS_CATEGORY + GerritClient.class);
-    private final JSch jsch;
+    private JSch jsch;
 
-    public GerritClient()
-    {
-        this.jsch = new JSch();
+    public GerritClient() {
+    }
+
+    public void setChannel(JSch channel) {
+        this.jsch = channel;
     }
 
     public List<GerritPatchSet> getNewPatchSets(GerritTriggerContext context) {
@@ -51,8 +53,13 @@ public class GerritClient {
 
     private Session openSession(GerritTriggerContext context) throws JSchException {
 
+        if (jsch == null)
+            jsch = new JSch();
+
         TeamCitySshKey key = context.getSshKey();
-        jsch.addIdentity(context.getUsername(), key.getPrivateKey(), null, null);
+
+        if (key != null)
+            jsch.addIdentity(context.getUsername(), key.getPrivateKey(), null, null);
 
         String server = context.getServer().replace("ssh://" , "");
         int port = 29418;
