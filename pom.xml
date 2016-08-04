@@ -8,6 +8,7 @@
   <version>1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <properties>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <teamcity-version>9.1</teamcity-version>
   </properties>
   <repositories>
