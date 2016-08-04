@@ -18,8 +18,7 @@ public class GerritSettings {
 
     private final ExtensionsProvider extensionProvider;
     private final String[] myMandatoryProperties = new String[] {
-            Constants.GERRIT_SERVER, Constants.GERRIT_PROJECT, Constants.GERRIT_USERNAME,
-            TEAMCITY_SSH_KEY_PROP};
+            Constants.GERRIT_SERVER, Constants.GERRIT_USERNAME, TEAMCITY_SSH_KEY_PROP};
 
     public GerritSettings(@NotNull ExtensionsProvider myExtensionProvider) {
         this.extensionProvider = myExtensionProvider;
@@ -81,7 +80,7 @@ public class GerritSettings {
         };
     }
 
-    @NotNull
+    @Nullable
     public String getTrimmedParameter(Map<String, String> parameters, String key) {
 
         // Not sure how TeamCity inputs empty string parameters in UI, so playing it safe for nulls.

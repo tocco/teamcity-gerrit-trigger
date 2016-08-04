@@ -15,7 +15,7 @@ public class GerritTriggerContext {
     private final Map<String, String> parameters;
 
     public GerritTriggerContext(@NotNull final GerritSettings gerritSettings,
-                                      @NotNull final PolledTriggerContext polledTriggerContext) {
+                                @NotNull final PolledTriggerContext polledTriggerContext) {
 
         this.settings = gerritSettings;
         this.context = polledTriggerContext;
@@ -41,7 +41,7 @@ public class GerritTriggerContext {
         return getProjectParameter().length() > 0;
     }
 
-    @NotNull
+    @Nullable
     public String getProjectParameter() {
         return settings.getTrimmedParameter(parameters, Constants.GERRIT_PROJECT);
     }
