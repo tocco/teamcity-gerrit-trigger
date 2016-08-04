@@ -1,60 +1,52 @@
-<%@ include file="/include.jsp" %>
-<%@ page import="org.saulis.Parameters" %>
 <%@ taglib prefix="props" tagdir="/WEB-INF/tags/props" %>
-<jsp:useBean id="propertiesBean" type="jetbrains.buildServer.controllers.BasePropertiesBean" scope="request"/>
+<%@ taglib prefix="admin" tagdir="/WEB-INF/tags/admin" %>
+<jsp:useBean id="keys" class="org.saulis.Constants" scope="request" />
 
-<tr class="noBorder" >
+<tr>
     <td colspan="2">
-        <em>Gerrit Trigger will add a new build to the queue after a new patchset is detected.</em>
+        <span>Gerrit Trigger will add a new build to the queue after a new patchset is detected.</span>
     </td>
 </tr>
 
-<tr class="noBorder" >
-    <td><label for="<%=Parameters.HOST%>">Host: <l:star/></label></td>
+<tr>
+    <th><label for="${keys.gerritServer}">Server: <l:star/></label></th>
     <td>
-       <props:textProperty name="<%=Parameters.HOST%>" style="width:100%;"/>
-      <span class="smallNote">
-          Example: dev.gerrit.com<br/>
-      </span>
-        <span class="error" id="error_<%=Parameters.HOST%>"></span>
+        <props:textProperty name="${keys.gerritServer}" style="width:10em;"/>
+        <span class="smallNote">
+            Example: dev.gerrit.com<br/>
+        </span>
+        <span class="error" id="error_${keys.gerritServer}"></span>
     </td>
 </tr>
 
-<tr class="noBorder" >
-    <td><label for="<%=Parameters.USERNAME%>">Username: </label></td>
+<tr>
+    <th><label for="${keys.gerritProject}">Project: <l:star/></label></th>
     <td>
-       <props:textProperty name="<%=Parameters.USERNAME%>" style="width:10em;"/>
-        <span class="error" id="error_<%=Parameters.USERNAME%>"></span>
+        <props:textProperty name="${keys.gerritProject}" style="width:10em;"/>
+        <span class="error" id="error_${keys.gerritProject}"></span>
     </td>
 </tr>
 
-<tr class="noBorder" >
-    <td><label for="<%=Parameters.KEYPATH%>">Custom Private Key path: </label></td>
+<tr>
+    <th><label for="${keys.gerritUsername}">Username: <l:star/></label></th>
     <td>
-        <props:textProperty name="<%=Parameters.KEYPATH%>" style="width:10em;"/>
-        <span class="error" id="error_<%=Parameters.KEYPATH%>"></span>
+        <props:textProperty name="${keys.gerritUsername}" style="width:10em;"/>
+        <span class="error" id="error_${keys.gerritUsername}"></span>
     </td>
 </tr>
 
-<tr class="noBorder" >
-    <td><label for="<%=Parameters.PASSPHRASE%>">Passphrase: </label></td>
+<tr>
+    <th><label for="${keys.sshKey}">SSH Key: <l:star/></label></th>
     <td>
-        <props:passwordProperty name="<%=Parameters.PASSPHRASE%>" style="width:10em;"/>
-        <span class="error" id="error_<%=Parameters.PASSPHRASE%>"></span>
+        <admin:sshKeys projectId="${projectId}"/>
+        <span class="error" id="error_${keys.sshKey}"></span>
     </td>
 </tr>
 
-
-<tr class="noBorder" >
-    <td><label for="<%=Parameters.PROJECT%>">Project: </label></td>
+<tr>
+    <th><label for="${keys.gerritBranch}">Branch:</label></th>
     <td>
-        <props:textProperty name="<%=Parameters.PROJECT%>" style="width:10em;"/>
-    </td>
-</tr>
-
-<tr class="noBorder" >
-    <td><label for="<%=Parameters.BRANCH%>">Branch: </label></td>
-    <td>
-        <props:textProperty name="<%=Parameters.BRANCH%>" style="width:10em;"/>
+        <props:textProperty name="${keys.gerritBranch}" style="width:10em;"/>
+        <span class="error" id="error_${keys.gerritBranch}"></span>
     </td>
 </tr>

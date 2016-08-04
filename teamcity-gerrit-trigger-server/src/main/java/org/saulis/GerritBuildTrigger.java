@@ -12,32 +12,42 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-class GerritPolledBuildTrigger extends PolledBuildTrigger {
-    private static final Logger LOG = Logger.getLogger(Loggers.VCS_CATEGORY + GerritPolledBuildTrigger.class);
+class GerritBuildTrigger extends PolledBuildTrigger {
+
+    private static final Logger LOG = Logger.getLogger(Loggers.VCS_CATEGORY + GerritBuildTrigger.class);
+
     private final GerritClient gerritClient;
+    private final GerritSettings gerritSettings;
     private final BuildCustomizerFactory buildCustomizerFactory;
 
-    public GerritPolledBuildTrigger(GerritClient gerritClient, BuildCustomizerFactory buildCustomizerFactory) {
+    public GerritBuildTrigger(@NotNull final GerritClient gerritClient,
+                                    @NotNull final GerritSettings gerritSettings,
+                                    @NotNull final BuildCustomizerFactory buildCustomizerFactory) {
+
         this.gerritClient = gerritClient;
+        this.gerritSettings = gerritSettings;
         this.buildCustomizerFactory = buildCustomizerFactory;
     }
 
     @Override
     public void triggerBuild(@NotNull PolledTriggerContext polledTriggerContext) throws BuildTriggerException {
         try {
-            List<GerritPatchSet> newPatchSets = gerritClient.getNewPatchSets(new GerritPolledTriggerContext(polledTriggerContext));
+            GerritTriggerContext context = gerritSettings.createContext(polledTriggerContext);
+            List<GerritPatchSet> newPatchSets = gerritClient.getNewPatchSets(context);
 
-            LOG.debug(String.format("GERRIT: Going to trigger %s new build(s).", newPatchSets.size()));
+            if (!newPatchSets.isEmpty()) {
+                LOG.debug(String.format("Found %s new patch set(s), triggering build(s).", newPatchSets.size()));
+            }
 
             for(GerritPatchSet p : newPatchSets) {
                 SBuildType buildType = polledTriggerContext.getBuildType();
                 BuildCustomizer buildCustomizer = buildCustomizerFactory.createBuildCustomizer(buildType, null);
-                buildCustomizer.setDesiredBranchName(p.getRef().substring(5));
+                buildCustomizer.setDesiredBranchName(p.getChangeBranch());
 
                 buildCustomizer.createPromotion().addToQueue("Gerrit");
             }
         } catch (Exception e) {
-            LOG.error("GERRIT:", e);
+            LOG.error("Cannot get new patch sets.", e);
         }
     }
 }

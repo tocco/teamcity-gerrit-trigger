@@ -28,6 +28,10 @@ class GerritPatchSet {
         return ref;
     }
 
+    public String getChangeBranch() {
+        return ref.substring(5); // Strip 'refs/'
+    }
+
     public Date getCreatedOn() {
         return createdOn;
     }

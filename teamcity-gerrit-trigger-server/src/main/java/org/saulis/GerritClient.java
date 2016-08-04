@@ -6,9 +6,11 @@ import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-import jetbrains.buildServer.buildTriggers.PolledTriggerContext;
 import jetbrains.buildServer.log.Loggers;
+import jetbrains.buildServer.ssh.TeamCitySshKey;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -19,11 +21,12 @@ public class GerritClient {
     private static final Logger LOG = Logger.getLogger(Loggers.VCS_CATEGORY + GerritClient.class);
     private final JSch jsch;
 
-    public GerritClient(JSch jsch) {
-        this.jsch = jsch;
+    public GerritClient()
+    {
+        this.jsch = new JSch();
     }
 
-    public List<GerritPatchSet> getNewPatchSets(GerritPolledTriggerContext context) {
+    public List<GerritPatchSet> getNewPatchSets(GerritTriggerContext context) {
         ChannelExec channel = null;
         Session session = null;
 
@@ -31,7 +34,7 @@ public class GerritClient {
             session = openSession(context);
             channel = openChannel(context, session);
 
-            return readGerritPatchSets(context, channel);
+            return readPatchSets(context, channel);
         }
         catch (Exception e) {
             LOG.error("Gerrit trigger failed while getting patch sets.", e);
@@ -46,37 +49,46 @@ public class GerritClient {
         return new ArrayList<GerritPatchSet>();
     }
 
-    private Session openSession(GerritPolledTriggerContext context) throws JSchException {
+    private Session openSession(GerritTriggerContext context) throws JSchException {
 
-        if(context.hasPassphrase()) {
-            jsch.addIdentity(context.getPrivateKey(), context.getPassphrase());
-        } else {
-            jsch.addIdentity(context.getPrivateKey());
+        TeamCitySshKey key = context.getSshKey();
+        jsch.addIdentity(context.getUsername(), key.getPrivateKey(), null, null);
+
+        String server = context.getServer().replace("ssh://" , "");
+        int port = 29418;
+
+        int idx = server.indexOf(":");
+        if (idx != -1) {
+            port = Integer.valueOf(server.substring(idx + 1, server.length()));
+            server = server.substring(0, idx);
         }
 
-        Session session = jsch.getSession(context.getUsername(), context.getHost(), 29418);
+        Session session = jsch.getSession(context.getUsername(), server, port);
         session.setConfig("StrictHostKeyChecking", "no");
         session.connect();
 
         return session;
     }
 
-    private ChannelExec openChannel(GerritPolledTriggerContext context, Session session) throws JSchException {
-        ChannelExec channel;
-        channel = (ChannelExec)session.openChannel("exec");
-
+    private ChannelExec openChannel(GerritTriggerContext context, Session session) throws JSchException {
         String command = createCommand(context);
-        LOG.debug("GERRIT: " + command);
-        channel.setCommand(command);
 
+        LOG.debug("Execute Gerrit command: " + command);
+
+        ChannelExec channel = (ChannelExec)session.openChannel("exec");
+        channel.setPty(false);
+        channel.setCommand(command);
         channel.connect();
 
         return channel;
     }
 
-    private String createCommand(GerritPolledTriggerContext context) {
+    private String createCommand(GerritTriggerContext context) {
         StringBuilder command = new StringBuilder();
-        command.append("gerrit query --format=JSON status:open");
+        command.append("gerrit query");
+
+        command.append(" --current-patch-set");
+        command.append(" --format=JSON status:open");
 
         if(context.hasProjectParameter()) {
             command.append(" project:" + context.getProjectParameter());
@@ -90,13 +102,11 @@ public class GerritClient {
         // Assuming that no more than <limit> new patch sets are created during a single poll interval.
         // Adjust if needed.
         command.append(" limit:10");
-        command.append(" --current-patch-set ");
 
         return command.toString();
     }
 
-
-    private List<GerritPatchSet> readGerritPatchSets(GerritPolledTriggerContext context, ChannelExec channel) throws IOException {
+    private List<GerritPatchSet> readPatchSets(GerritTriggerContext context, ChannelExec channel) throws IOException {
         JsonStreamParser parser = new JsonStreamParser(new InputStreamReader(channel.getInputStream()));
 
         List<GerritPatchSet> patchSets = new ArrayList<GerritPatchSet>();
@@ -115,17 +125,15 @@ public class GerritClient {
 
               if(patchSet.getCreatedOn().after(timestamp)) {
                 patchSets.add(patchSet);
-                context.updateTimestampIfNewer(patchSet.getCreatedOn());
+                context.updateTimestamp(patchSet.getCreatedOn());
               }
             }
-        }
-        else {
-            context.updateTimestampIfNewer(new Date());
+        } else {
+            context.updateTimestamp(new Date());
         }
 
         return patchSets;
     }
-
 
     private GerritPatchSet parsePatchSet(JsonObject row) {
         String project = row.get("project").getAsString();
@@ -140,5 +148,4 @@ public class GerritClient {
     private boolean isStatsRow(JsonObject ticket) {
         return ticket.has("rowCount");
     }
-
 }
