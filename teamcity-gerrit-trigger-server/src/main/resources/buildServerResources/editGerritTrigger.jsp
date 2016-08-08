@@ -1,6 +1,8 @@
 <%@ taglib prefix="props" tagdir="/WEB-INF/tags/props" %>
 <%@ taglib prefix="admin" tagdir="/WEB-INF/tags/admin" %>
 <jsp:useBean id="keys" class="org.saulis.Constants" scope="request" />
+<jsp:useBean id="propertiesBean" scope="request" type="jetbrains.buildServer.controllers.BasePropertiesBean"/>
+<jsp:useBean id="buildForm" type="jetbrains.buildServer.controllers.admin.projects.EditableBuildTypeSettingsForm" scope="request"/>
 
 <tr>
     <td colspan="2">
@@ -11,7 +13,7 @@
 <tr>
     <th><label for="${keys.gerritServer}">Server: <l:star/></label></th>
     <td>
-        <props:textProperty name="${keys.gerritServer}" style="width:10em;"/>
+        <props:textProperty name="${keys.gerritServer}" style="width:18em;"/>
         <span class="smallNote">
             Example: dev.gerrit.com<br/>
         </span>
@@ -22,7 +24,7 @@
 <tr>
     <th><label for="${keys.gerritProject}">Project: <l:star/></label></th>
     <td>
-        <props:textProperty name="${keys.gerritProject}" style="width:10em;"/>
+        <props:textProperty name="${keys.gerritProject}" style="width:18em;"/>
         <span class="error" id="error_${keys.gerritProject}"></span>
     </td>
 </tr>
@@ -30,7 +32,7 @@
 <tr>
     <th><label for="${keys.gerritUsername}">Username: <l:star/></label></th>
     <td>
-        <props:textProperty name="${keys.gerritUsername}" style="width:10em;"/>
+        <props:textProperty name="${keys.gerritUsername}" style="width:18em;"/>
         <span class="error" id="error_${keys.gerritUsername}"></span>
     </td>
 </tr>
@@ -38,7 +40,7 @@
 <tr>
     <th><label for="${keys.sshKey}">SSH Key: <l:star/></label></th>
     <td>
-        <admin:sshKeys projectId="${projectId}"/>
+        <admin:sshKeys projectId="${buildForm.project.externalId}"/>
         <span class="error" id="error_${keys.sshKey}"></span>
     </td>
 </tr>
@@ -46,7 +48,7 @@
 <tr>
     <th><label for="${keys.gerritBranch}">Branch:</label></th>
     <td>
-        <props:textProperty name="${keys.gerritBranch}" style="width:10em;"/>
+        <props:textProperty name="${keys.gerritBranch}" style="width:18em;"/>
         <span class="error" id="error_${keys.gerritBranch}"></span>
     </td>
 </tr>
