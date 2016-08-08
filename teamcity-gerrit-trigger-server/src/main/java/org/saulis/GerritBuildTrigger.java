@@ -32,11 +32,14 @@ class GerritBuildTrigger extends PolledBuildTrigger {
     @Override
     public void triggerBuild(@NotNull PolledTriggerContext polledTriggerContext) throws BuildTriggerException {
         try {
+
             GerritTriggerContext context = gerritSettings.createContext(polledTriggerContext);
             List<GerritPatchSet> newPatchSets = gerritClient.getNewPatchSets(context);
 
             if (!newPatchSets.isEmpty()) {
                 LOG.debug(String.format("Found %s new patch set(s), triggering build(s).", newPatchSets.size()));
+            } else {
+                LOG.debug("No new patch set(s) found.");
             }
 
             for(GerritPatchSet p : newPatchSets) {

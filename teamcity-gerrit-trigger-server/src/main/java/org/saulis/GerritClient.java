@@ -19,6 +19,7 @@ import java.util.*;
 public class GerritClient {
 
     private static final Logger LOG = Logger.getLogger(Loggers.VCS_CATEGORY + GerritClient.class);
+    private static final int DEFAULT_GERRIT_PORT = 29418;
     private JSch jsch;
 
     public GerritClient() {
@@ -62,7 +63,7 @@ public class GerritClient {
             jsch.addIdentity(context.getUsername(), key.getPrivateKey(), null, null);
 
         String server = context.getServer().replace("ssh://" , "");
-        int port = 29418;
+        int port = DEFAULT_GERRIT_PORT;
 
         int idx = server.indexOf(":");
         if (idx != -1) {
