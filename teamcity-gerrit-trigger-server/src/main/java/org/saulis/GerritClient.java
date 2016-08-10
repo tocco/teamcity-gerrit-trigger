@@ -9,8 +9,6 @@ import com.jcraft.jsch.Session;
 import jetbrains.buildServer.log.Loggers;
 import jetbrains.buildServer.ssh.TeamCitySshKey;
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -129,7 +127,7 @@ public class GerritClient {
                 break;
               }
 
-              GerritPatchSet patchSet = parsePatchSet(row);
+              GerritPatchSet patchSet = GerritPatchSet.parse(row);
 
               if(patchSet.getCreatedOn().after(timestamp)) {
                 patchSets.add(patchSet);
@@ -141,16 +139,6 @@ public class GerritClient {
         }
 
         return patchSets;
-    }
-
-    private GerritPatchSet parsePatchSet(JsonObject row) {
-        String project = row.get("project").getAsString();
-        String branch = row.get("branch").getAsString();
-        JsonObject currentPatchSet = row.get("currentPatchSet").getAsJsonObject();
-        String ref = currentPatchSet.get("ref").getAsString();
-        long createdOn = currentPatchSet.get("createdOn").getAsLong() * 1000L;
-
-        return new GerritPatchSet(project, branch, ref, createdOn);
     }
 
     private boolean isStatsRow(JsonObject ticket) {

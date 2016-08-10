@@ -11,6 +11,7 @@ public class Constants {
     public static final String GERRIT_BRANCH = "gerritBranch";
 
     public static final String TIMESTAMP_KEY = "timestamp";
+    public static final String PATCHES_KEY = "patches";
 
     @NotNull
     public String getSshKey() {

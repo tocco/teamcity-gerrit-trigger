@@ -5,7 +5,9 @@ import jetbrains.buildServer.ssh.TeamCitySshKey;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 public class GerritTriggerContext {
@@ -79,6 +81,65 @@ public class GerritTriggerContext {
 
     private void setTimestamp(Date timestamp) {
         setStoredValue(Constants.TIMESTAMP_KEY, String.valueOf(timestamp.getTime()));
+    }
+
+    public void savePatch(GerritPatchSet patchSet) {
+        GerritPatchSet patch = null;
+        List<GerritPatchSet> patches = getPendingPatches();
+
+        // Find existing patch
+        for (GerritPatchSet p : patches) {
+            if (p.getRef().equals(patchSet.getRef())) {
+                patch = p;
+            }
+        }
+
+        if (patch != null) {
+            patch.incrementAge();
+        } else {
+            patches.add(patchSet);
+        }
+
+        savePendingPatches(patches);
+    }
+
+    public void removePatch(GerritPatchSet patchSet) {
+        GerritPatchSet patch = null;
+        List<GerritPatchSet> patches = getPendingPatches();
+
+        // Find patch
+        for (GerritPatchSet p : patches) {
+            if (p.getRef().equals(patchSet.getRef())) {
+                patch = p;
+            }
+        }
+
+        if (patch != null) {
+            patches.remove(patch);
+            savePendingPatches(patches);
+        }
+    }
+
+    private void savePendingPatches(List<GerritPatchSet> pendingPatches) {
+        List<GerritPatchSet> patches = new ArrayList<GerritPatchSet>(pendingPatches);
+
+        // Remove expired patches
+        for (GerritPatchSet patch : pendingPatches) {
+            if (patch.isExpired()) {
+                patches.remove(patch);
+            }
+        }
+
+        String json = GerritPatchSet.toJson(patches);
+        setStoredValue(Constants.PATCHES_KEY, json);
+    }
+
+    public List<GerritPatchSet> getPendingPatches() {
+        String json = getStoredValue(Constants.PATCHES_KEY);
+        if (json == null)
+            return new ArrayList<GerritPatchSet>();
+
+        return GerritPatchSet.parseList(json);
     }
 
     private String getStoredValue(String key) {
