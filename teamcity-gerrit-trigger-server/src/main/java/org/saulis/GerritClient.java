@@ -18,7 +18,7 @@ public class GerritClient {
 
     private static final Logger LOG = Logger.getLogger(Loggers.VCS_CATEGORY + GerritClient.class);
     private static final int DEFAULT_GERRIT_PORT = 29418;
-    private static final int SSH_TIMEOUT = 10; // in seconds
+    private static final int SSH_TIMEOUT = 90; // in seconds
     private JSch jsch;
 
     public GerritClient() {
